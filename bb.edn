@@ -1,4 +1,7 @@
 {:tasks
  {dev
   (clojure
-   "-A:cljs:dev -M -m shadow.cljs.devtools.cli watch client")}}
+   "-A:cljs:dev -M -m shadow.cljs.devtools.cli watch client")
+  build
+  (clojure
+   "-A:cljs:dev -M -m shadow.cljs.devtools.cli release client")}}

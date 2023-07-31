@@ -109,8 +109,10 @@
    :handler/handler {:routes (ig/ref :router/routes)}
    :router/routes {}})
 
-(defn start! []
-  (reset! system (ig/init config)))
+(defn start!
+  ([_] (start!))
+  ([]
+   (reset! system (ig/init config))))
 
 (defn halt! []
   (when-let [system @system] (ig/halt! system)))
