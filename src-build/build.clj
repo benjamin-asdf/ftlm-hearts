@@ -23,9 +23,11 @@
                      :or {optimize true, debug false, verbose false, version version}}]
   (println "Building client. Version:" version)
   (shadow-server/start!)
-  (shadow-api/release :prod {:debug debug,
-                             :verbose verbose,
-                             :config-merge [{:compiler-options {:optimizations (if optimize :advanced :simple)}}]})
+  (shadow-api/release
+   :client
+   {:debug debug,
+    :verbose verbose,
+    :config-merge [{:compiler-options {:optimizations (if optimize :advanced :simple)}}]})
   (shadow-server/stop!))
 
 (defn uberjar [{:keys [jar-name version optimize debug verbose]
