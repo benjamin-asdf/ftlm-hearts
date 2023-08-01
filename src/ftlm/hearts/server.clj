@@ -110,7 +110,8 @@
    :router/routes {}})
 
 (defn start! []
-  (reset! system (ig/init config)))
+  (let [system (reset! system (ig/init config))]
+    (println "Started server on " (-> config :adapter/jetty :port))))
 
 (defn halt! []
   (when-let [system @system] (ig/halt! system)))

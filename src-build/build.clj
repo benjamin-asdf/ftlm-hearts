@@ -47,13 +47,13 @@
   (println "Compiling server. Version:" version)
   (b/compile-clj {:basis      basis
                   :src-dirs   ["src"]
-                  :ns-compile '[prod]
+                  :ns-compile '[ftlm.hearts.prod]
                   :class-dir  class-dir})
 
   (println "Building uberjar")
   (b/uber {:class-dir class-dir
            :uber-file (str (or jar-name (default-jar-name {:version version})))
            :basis     basis
-           :main      'prod}))
+           :main      'ftlm.hearts.prod}))
 
 (defn noop [_])                         ; run to preload mvn deps

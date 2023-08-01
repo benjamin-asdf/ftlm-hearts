@@ -2,3 +2,4 @@
 /.nrepl-port
 /resources/public/js
 /.shadow-cljs/
+/target/
