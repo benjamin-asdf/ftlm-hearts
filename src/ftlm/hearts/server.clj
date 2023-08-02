@@ -8,11 +8,14 @@
    [ring.util.response :as resp]
 
    [shadow.graft :as graft]
+   [shadow.css :refer [css]]
 
    [muuntaja.core :as m]
    [reitit.ring :as ring]
    [reitit.coercion.spec]
    [reitit.ring.coercion :as rrc]
+   [ring.middleware.gzip :refer [wrap-gzip]]
+
    [reitit.ring.middleware.muuntaja :as muuntaja]
    [reitit.ring.middleware.parameters :as parameters]))
 
@@ -29,26 +32,13 @@
 
 (def graft (graft/start pr-str))
 
-(defn ui-page []
-  (h/html
-   {:escape-strings? false}
-   [:head
-    [:link {:rel "preload" :as "script" :href "/js/main.js"}]
-    [:title "My Page"]]
-
-   [:body
-    [:div
-     [:a {:href "http://google.com"} "google.com"]
-     (graft "disappearing-link" :prev-sibling)]
-
-    [:script {:type "text/javascript" :src "/js/main.js"  :defer true}]]))
-
 (defn base [body]
   (h/html
    {:escape-strings? false}
    [:head
     [:link {:rel "preload" :as "script" :href "/js/main.js"}]
-    [:title "My Page"]]
+    [:link {:rel "stylesheet" :href "/css/ui.css"}]
+    [:title "ftl-hearts"]]
 
    [:body
     body
@@ -64,15 +54,14 @@
 (defn clip-page [req]
   (page-resp
    [:div.clip
-    {:style {:display "flex" :justify-content "center"}}
+    {:class (css :flex :justify-center)}
     [:div
-     [:button "lub-dub"]
-     (graft "clip" :prev-sibling clip)
-     (graft "just-log-data" :parent {:hello "world"})
      [:svg
       {:xmlns "http://www.w3.org/2000/svg" :width "200" :height "200" :viewBox "0 0 100 100"}
-      [:circle {:cx "50" :cy "50" :r "50" :fill "orange"}]]]]))
-
+      [:circle {:cx "50" :cy "50" :r "50" :fill "orange"}]]
+     (graft "clip" :prev-sibling clip)
+     [:button {:class (css :px-4 :shadow {:background-color "red"})} "lub-dub"]
+     (graft "clip" :prev-sibling clip)]]))
 
 (defmethod ig/init-key :router/routes [_ _]
   [["/"
@@ -93,7 +82,8 @@
                          muuntaja/format-response-middleware]}})
    (ring/routes
     (ring/create-resource-handler {:path "/"})
-    (ring/create-default-handler))))
+    (ring/create-default-handler))
+   {:middleware [{:wrap wrap-gzip}]}))
 
 (defmethod ig/init-key :adapter/jetty [_ {:keys [handler] :as opts}]
   (jetty/run-jetty handler (-> opts (dissoc :handler) (assoc :join? false))))
@@ -120,6 +110,8 @@
 
   (do (halt!)
       (start!))
+
+
   ;; http://localhost:8093
   ;; http://localhost:8093/clip/foo
 

@@ -3,3 +3,4 @@
 /resources/public/js
 /.shadow-cljs/
 /target/
+/resources/public/

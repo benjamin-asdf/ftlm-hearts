@@ -1,4 +1,5 @@
-{:deps {:aliases [:client]}
+{:nrepl {:port 7013}
+ :deps {:aliases [:client]}
  :builds
  {:client
   {:target :browser

@@ -4,20 +4,23 @@
         ring/ring-defaults {:mvn/version "0.3.4"}
         metosin/reitit {:mvn/version "0.7.0-alpha5"}
         com.thheller/shadow-graft {:mvn/version "0.9.0"}
-        hiccup/hiccup {:mvn/version "2.0.0-RC1"}}
+        hiccup/hiccup {:mvn/version "2.0.0-RC1"}
+        com.thheller/shadow-css {:mvn/version "0.4.4"}
+        amalloy/ring-gzip-middleware {:mvn/version "0.1.4"}}
  :aliases
  {:server {}
-  :dev {:extra-paths ["env/dev/src"]
+  :dev {:extra-paths ["dev"]
         :extra-deps
         {binaryage/devtools {:mvn/version "1.0.3"}
          cider/cider-nrepl {:mvn/version "0.32.0"}}}
+  :+css-gen {:extra-paths ["css"]
+             :ns-default css-gen}
   :cljs {:extra-paths ["src" "resources"]
          :extra-deps
          {thheller/shadow-cljs {:mvn/version "2.24.1"}}}
   :test {:extra-paths []
          :extra-deps {}}
   :build
-
   {:extra-paths ["src-build"]
    :ns-default build
    :extra-deps {io.github.clojure/tools.build {:git/tag "v0.8.2" :git/sha "ba1a2bf"}

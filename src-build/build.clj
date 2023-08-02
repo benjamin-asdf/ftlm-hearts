@@ -1,9 +1,13 @@
 (ns build
   "build electric.jar library artifact and demos"
-  (:require [clojure.tools.build.api :as b]
-            [org.corfield.build :as bb]
-            [shadow.cljs.devtools.api :as shadow-api]
-            [shadow.cljs.devtools.server :as shadow-server]))
+  (:require
+   [css-gen]
+   [clojure.java.io :as io]
+   [clojure.tools.build.api :as b]
+   [org.corfield.build :as bb]
+   [shadow.css.build :as cb]
+   [shadow.cljs.devtools.api :as shadow-api]
+   [shadow.cljs.devtools.server :as shadow-server]))
 
 (def lib 'benjamin/ftlm-hearts)
 (def version (b/git-process {:git-args "describe --tags --long --always --dirty"}))
@@ -18,6 +22,18 @@
 
 (defn clean-cljs [_]
   (b/delete {:path "resources/public/js"}))
+
+(defn css-release []
+  (let [build-state
+        (-> (cb/start)
+            (cb/index-path css-gen/index-path {})
+            (cb/generate css-gen/generate-opts)
+            (cb/write-outputs-to css-gen/output))]
+
+    (doseq [mod (:outputs build-state)
+            {:keys [warning-type] :as warning} (:warnings mod)]
+
+      (prn [:CSS (name warning-type) (dissoc warning :warning-type)]))))
 
 (defn build-client [{:keys [optimize debug verbose version]
                      :or {optimize true, debug false, verbose false, version version}}]
@@ -57,3 +73,8 @@
            :main      'ftlm.hearts.prod}))
 
 (defn noop [_])                         ; run to preload mvn deps
+
+(comment
+  (css-release)
+
+  )
