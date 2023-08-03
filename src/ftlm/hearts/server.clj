@@ -22,14 +22,6 @@
 ;; lub, wait, dub, wait, diastole, repeat
 (def clip {:clip/timestamps [250, 50, 100, 600]})
 
-(defn home-view [count]
-  [:html
-   [:bodyhiccup/hiccup {:mvn/version "2.0.0-RC1"}
-    [:h1 "Welcome home!"]
-    [:ul
-     (for [i (range count)]
-       [:li i])]]])
-
 (def graft (graft/start pr-str))
 
 (defn base [body]
@@ -64,10 +56,7 @@
      (graft "clip" :prev-sibling clip)]]))
 
 (defmethod ig/init-key :router/routes [_ _]
-  [["/"
-    {:get (constantly
-           (-> (resp/response (str (ui-page)))
-               (resp/header "Content-Type" "text/html")))}]
+  [["/" {:get {:handler #'clip-page}}]
    ["/clip/:clip-id"
     {:get {:handler #'clip-page}}]])
 
@@ -116,3 +105,8 @@
   ;; http://localhost:8093/clip/foo
 
   )
+
+
+;; users
+;; login
+;; auth,

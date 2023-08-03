@@ -4,7 +4,9 @@
    [css-gen]
    [clojure.java.io :as io]
    [clojure.tools.build.api :as b]
+
    [org.corfield.build :as bb]
+   [babashka.fs :as fs]
    [shadow.css.build :as cb]
    [shadow.cljs.devtools.api :as shadow-api]
    [shadow.cljs.devtools.server :as shadow-server]))
@@ -66,15 +68,18 @@
                   :ns-compile '[ftlm.hearts.prod]
                   :class-dir  class-dir})
 
-  (println "Building uberjar")
-  (b/uber {:class-dir class-dir
-           :uber-file (str (or jar-name (default-jar-name {:version version})))
-           :basis     basis
-           :main      'ftlm.hearts.prod}))
+  (let [uber-file (str (or jar-name (default-jar-name {:version version})))]
+    (println "Building uberjar")
+    (b/uber {:class-dir class-dir
+             :uber-file  uber-file
+             :basis     basis
+             :main      'ftlm.hearts.prod})
+
+    (println "Setting up run scripts")
+    (fs/delete-if-exists "release.jar")
+    (fs/create-sym-link "release.jar" uber-file)))
 
 (defn noop [_])                         ; run to preload mvn deps
 
 (comment
-  (css-release)
-
-  )
+  (css-release))
