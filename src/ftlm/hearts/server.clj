@@ -3,24 +3,29 @@
    [integrant.core :as ig]
 
    [ring.adapter.jetty :as jetty]
-   [ring.middleware.defaults :as ring-defaults]
    [hiccup2.core :as h]
    [ring.util.response :as resp]
 
-   [clojure.java.io :as io]
-   [xtdb.api :as xt]
+   ;; [clojure.java.io :as io]
+   ;; [xtdb.api :as xt]
 
    [shadow.graft :as graft]
    [shadow.css :refer [css]]
 
    [muuntaja.core :as m]
+   [ring.middleware.gzip :refer [wrap-gzip]]
+   [ring.middleware.defaults :refer [api-defaults] :as ring-defaults]
+   [ring.middleware.session.memory :as memory]
+
    [reitit.ring :as ring]
    [reitit.coercion.spec]
    [reitit.ring.coercion :as rrc]
-   [ring.middleware.gzip :refer [wrap-gzip]]
 
+   [reitit.ring.middleware.defaults :refer [ring-defaults-middleware]]
    [reitit.ring.middleware.muuntaja :as muuntaja]
    [reitit.ring.middleware.parameters :as parameters]))
+
+(def session-store (memory/memory-store))
 
 ;; lub, wait, dub, wait, diastole, repeat
 (def clip {:clip/timestamps [250, 50, 100, 600]})
@@ -46,7 +51,7 @@
    resp/response
    (resp/header "Content-Type" "text/html")))
 
-(defn clip-page [req]
+(defn clip-page [_req]
   (page-resp
    [:div.clip
     {:class (css :flex :justify-center)}
@@ -60,6 +65,8 @@
 
 (defmethod ig/init-key :router/routes [_ _]
   [["/" {:get {:handler #'clip-page}}]
+   ["/api"
+    {:defaults api-defaults}]
    ["/clip/:clip-id"
     {:get {:handler #'clip-page}}]])
 
@@ -75,58 +82,18 @@
    (ring/routes
     (ring/create-resource-handler {:path "/"})
     (ring/create-default-handler))
-   {:middleware [{:wrap wrap-gzip}]}))
+   {:middleware
+    [{:wrap wrap-gzip}
+     ring-defaults-middleware]
+    :defaults
+    (-> ring-defaults/site-defaults
+        (assoc-in [:session :store] session-store))}))
 
 (defmethod ig/init-key :adapter/jetty [_ {:keys [handler] :as opts}]
   (jetty/run-jetty handler (-> opts (dissoc :handler) (assoc :join? false))))
 
 (defmethod ig/halt-key! :adapter/jetty [_ server]
   (.stop server))
-
-(defmethod ig/init-key :xtdb/node [_ opts]
-  (xt/start-node opts))
-
-(defmethod ig/halt-key! :xtdb/node [_ node]
-  (.close node))
-
-(defonce system (atom nil))
-
-(defn xtdb-node [] (get @system :xtdb/node :not-initialized))
-
-(def config
-  {:adapter/jetty {:port 8093
-                   :handler (ig/ref :handler/handler)}
-   :handler/handler {:routes (ig/ref :router/routes)}
-   :router/routes {}
-   :xtdb/node
-   (let [kv-store (fn [dir]
-                    {:kv-store {:xtdb/module 'xtdb.rocksdb/->kv-store
-                                :db-dir (io/file dir)
-                                :sync? true}})]
-     {:xtdb/tx-log (kv-store "data/dev/tx-log")
-      :xtdb/document-store (kv-store "data/dev/doc-store")
-      :xtdb/index-store (kv-store "data/dev/index-store")})})
-
-(defn start! []
-  (reset! system (ig/init config))
-  (println "Started server on " (-> config :adapter/jetty :port)))
-
-(defn halt! []
-  (when-let [system @system] (ig/halt! system)))
-
-(defn restart []
-  (halt!)
-  (start!))
-
-(comment
-  (restart)
-  (xt/submit-tx ( xtdb-node) [[::xt/put {:xt/id "hi2u" :user/name "zig"}]])
-  (xt/q (xt/db (xtdb-node)) '{:find [e] :where [[e :user/name "zig"]]})
-
-  ;; http://localhost:8093
-  ;; http://localhost:8093/clip/foo
-
-  )
 
 
 ;; users
