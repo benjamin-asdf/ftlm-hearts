@@ -7,6 +7,9 @@
    [hiccup2.core :as h]
    [ring.util.response :as resp]
 
+   [clojure.java.io :as io]
+   [xtdb.api :as xt]
+
    [shadow.graft :as graft]
    [shadow.css :refer [css]]
 
@@ -80,26 +83,45 @@
 (defmethod ig/halt-key! :adapter/jetty [_ server]
   (.stop server))
 
+(defmethod ig/init-key :xtdb/node [_ opts]
+  (xt/start-node opts))
+
+(defmethod ig/halt-key! :xtdb/node [_ node]
+  (.close node))
+
 (defonce system (atom nil))
+
+(defn xtdb-node [] (get @system :xtdb/node :not-initialized))
 
 (def config
   {:adapter/jetty {:port 8093
                    :handler (ig/ref :handler/handler)}
    :handler/handler {:routes (ig/ref :router/routes)}
-   :router/routes {}})
+   :router/routes {}
+   :xtdb/node
+   (let [kv-store (fn [dir]
+                    {:kv-store {:xtdb/module 'xtdb.rocksdb/->kv-store
+                                :db-dir (io/file dir)
+                                :sync? true}})]
+     {:xtdb/tx-log (kv-store "data/dev/tx-log")
+      :xtdb/document-store (kv-store "data/dev/doc-store")
+      :xtdb/index-store (kv-store "data/dev/index-store")})})
 
 (defn start! []
-  (let [system (reset! system (ig/init config))]
-    (println "Started server on " (-> config :adapter/jetty :port))))
+  (reset! system (ig/init config))
+  (println "Started server on " (-> config :adapter/jetty :port)))
 
 (defn halt! []
   (when-let [system @system] (ig/halt! system)))
 
+(defn restart []
+  (halt!)
+  (start!))
+
 (comment
-
-  (do (halt!)
-      (start!))
-
+  (restart)
+  (xt/submit-tx ( xtdb-node) [[::xt/put {:xt/id "hi2u" :user/name "zig"}]])
+  (xt/q (xt/db (xtdb-node)) '{:find [e] :where [[e :user/name "zig"]]})
 
   ;; http://localhost:8093
   ;; http://localhost:8093/clip/foo
