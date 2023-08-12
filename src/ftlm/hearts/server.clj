@@ -3,9 +3,9 @@
    [integrant.core :as ig]
 
    [ring.adapter.jetty :as jetty]
-   [hiccup2.core :as h]
-   [ring.util.response :as resp]
 
+   ;; [ring.util.response :as resp]
+   [ftlm.hearts.html :refer [page-resp]]
    ;; [clojure.java.io :as io]
    ;; [xtdb.api :as xt]
 
@@ -23,7 +23,9 @@
 
    [reitit.ring.middleware.defaults :refer [ring-defaults-middleware]]
    [reitit.ring.middleware.muuntaja :as muuntaja]
-   [reitit.ring.middleware.parameters :as parameters]))
+   [reitit.ring.middleware.parameters :as parameters]
+   [ftlm.hearts.auth.auth :as auth]
+   [ftlm.hearts.auth.ui :as auth-ui]))
 
 (def session-store (memory/memory-store))
 
@@ -32,26 +34,8 @@
 
 (def graft (graft/start pr-str))
 
-(defn base [body]
-  (h/html
-   {:escape-strings? false}
-   [:head
-    [:link {:rel "preload" :as "script" :href "/js/main.js"}]
-    [:link {:rel "stylesheet" :href "/css/ui.css"}]
-    [:title "ftl-hearts"]]
-
-   [:body
-    body
-    [:script {:type "text/javascript" :src "/js/main.js" :defer true}]]))
-
-(defn page-resp [body]
-  (->
-   (base body)
-   str
-   resp/response
-   (resp/header "Content-Type" "text/html")))
-
-(defn clip-page [_req]
+(defn clip-page [req]
+  (def req req)
   (page-resp
    [:div.clip
     {:class (css :flex :justify-center)}
@@ -65,8 +49,14 @@
 
 (defmethod ig/init-key :router/routes [_ _]
   [["/" {:get {:handler #'clip-page}}]
+   ["/login" auth-ui/login]
    ["/api"
-    {:defaults api-defaults}]
+    {:defaults api-defaults
+     :middleware [auth/auth-middleware]}
+    ["/clip/:clip-id"
+     {:get {:handler #'clip-page}
+      :delete {:handler (constantly nil)}
+      :post {:handler (constantly nil)}}]]
    ["/clip/:clip-id"
     {:get {:handler #'clip-page}}]])
 
@@ -95,7 +85,17 @@
 (defmethod ig/halt-key! :adapter/jetty [_ server]
   (.stop server))
 
+;; login
+;; logout
+;; clip create
+;; clip delete
 
 ;; users
 ;; login
 ;; auth,
+
+(comment
+  (reitit.core/match-by-path
+   (ring/router (:router/routes @ftlm.hearts.system/system))
+   "/login")
+  )
