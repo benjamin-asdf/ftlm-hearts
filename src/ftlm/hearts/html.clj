@@ -1,7 +1,8 @@
 (ns ftlm.hearts.html
   (:require
    [hiccup2.core :as h]
-   [ring.util.response :as resp]))
+   [ring.util.response :as resp]
+   [ring.middleware.anti-forgery :as csrf]))
 
 (defn base [body]
   (h/html
@@ -9,6 +10,8 @@
    [:head
     [:link {:rel "preload" :as "script" :href "/js/main.js"}]
     [:link {:rel "stylesheet" :href "/css/ui.css"}]
+    (when (bound? #'csrf/*anti-forgery-token*)
+      [:meta {:name "x-csrf-token" :content csrf/*anti-forgery-token*}])
     [:title "ftl-hearts"]]
    [:body
     body

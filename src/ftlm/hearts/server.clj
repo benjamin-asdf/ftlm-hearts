@@ -49,7 +49,8 @@
 
 (defmethod ig/init-key :router/routes [_ _]
   [["/" {:get {:handler #'clip-page}}]
-   ["/login" auth-ui/login]
+   ["/login" {:get auth-ui/login
+              :post auth/login}]
    ["/api"
     {:defaults api-defaults
      :middleware [auth/auth-middleware]}
@@ -88,6 +89,7 @@
 ;; login
 ;; logout
 ;; clip create
+
 ;; clip delete
 
 ;; users
