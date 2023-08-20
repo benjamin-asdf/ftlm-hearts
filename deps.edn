@@ -4,6 +4,7 @@
         ring/ring-defaults {:mvn/version "0.3.4"}
         metosin/reitit-middleware {:mvn/version "0.7.0-alpha5"}
         metosin/reitit {:mvn/version "0.7.0-alpha5"}
+        metosin/reitit-malli {:mvn/version "0.7.0-alpha5"}
         com.fbeyer/reitit-ring-defaults {:mvn/version "0.1.0"}
         com.thheller/shadow-graft {:mvn/version "0.9.0"}
         hiccup/hiccup {:mvn/version "2.0.0-RC1"}
