@@ -59,9 +59,9 @@
          (js/setInterval
           (fn
             []
+            (swap! state assoc :animating? true)
             (js/window.navigator.vibrate (clj->js timestamps)))
-          1000)
-         :animating? true))
+          1000)))
 
 (defmethod graft/scion "clip" [opts btn]
   (.addEventListener btn "click" (fn [_] (start-clip! opts))))

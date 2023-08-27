@@ -40,9 +40,9 @@
   (page-resp
    req
    [:div {:class (css :flex :justify-center)}
-    [:div {:class (css :mt-20 :flex :flex-col :w-2of3 :h-2of3)}
+    [:div {:class (css :mt-20 :flex :flex-col :w-full :h-full [:lg :w-2of3 :h-2of3])}
      [:div {:class (css :self-stretch :flex :justify-center)}
-      [:button {:class (css :px-8 :shadow :text-lg :text-white :bg-rose-500 :font-bold)} "lub-dub"]]
+      [:button {:class (css  :px-8 :shadow :text-2xl :text-white :bg-rose-500 :font-bold)} "lub-dub"]]
      (graft "clip" :prev-sibling clip)
      [:canvas {:id "main" }]
      (graft "clip" :prev-sibling clip)]]))
