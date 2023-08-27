@@ -1,8 +1,8 @@
 (ns
 
-    ^{:tools/eval-after-load
-      [(fn [] (ftlm.hearts.system/restart))]
-      }
+    ;; ^{:tools/eval-after-load
+    ;;   [(fn [] (ftlm.hearts.system/restart))]
+    ;;   }
 
     ftlm.hearts.server
     (:require
@@ -102,5 +102,5 @@
   #_{:clj-kondo/ignore [:unresolved-namespace]}
   (ftlm.hearts.system/restart))
 
-(defn cider-eval-ns-after-loads []
-  (run! #(%) (some->> (meta *ns*) :tools/eval-after-load)))
+;; (defn cider-eval-ns-after-loads []
+;;   (run! #(%) (some->> (meta *ns*) :tools/eval-after-load)))
