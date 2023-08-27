@@ -4,7 +4,7 @@
 
    [ring.adapter.jetty :as jetty]
    [ring.util.response :as resp]
-   [ftlm.hearts.html :refer [page-resp]]
+   [ftlm.hearts.html :refer [page-resp graft]]
    ;; [clojure.java.io :as io]
    ;; [xtdb.api :as xt]
 
@@ -30,19 +30,20 @@
 ;; lub, wait, dub, wait, diastole, repeat
 (def clip {:clip/timestamps [250, 50, 100, 600]})
 
-(def graft (graft/start pr-str))
-
-(defn clip-page [_req]
+(defn clip-page [req]
   (page-resp
+   req
    [:div.clip
     {:class (css :flex :justify-center)}
     [:div
-     [:svg
-      {:xmlns "http://www.w3.org/2000/svg" :width "200" :height "200" :viewBox "0 0 100 100"}
-      [:circle {:cx "50" :cy "50" :r "50" :fill "orange"}]]
-     (graft "clip" :prev-sibling clip)
-     [:button {:class (css :px-4 :shadow {:background-color "red"})} "lub-dub"]
-     (graft "clip" :prev-sibling clip)]]))
+     ;; [:svg
+     ;;  {:xmlns "http://www.w3.org/2000/svg" :width "200" :height "200" :viewBox "0 0 100 100"}
+     ;;  [:circle {:cx "50" :cy "50" :r "50" :fill "orange"}]]
+     ;; (graft "clip" :prev-sibling clip)
+     ;; [:button {:class (css :px-4 :shadow {:background-color "red"})} "lub-dub"]
+     ;; (graft "clip" :prev-sibling clip)
+     [:canvas {:id "main" :class (css :w2of4 :h2of5)}]
+     ]]))
 
 (defmethod ig/init-key :router/routes [_ _]
   [["/" {:get {:handler #'clip-page}}]
@@ -97,4 +98,11 @@
 
 (comment
   #_{:clj-kondo/ignore [:unresolved-namespace]}
-  (ftlm.hearts.system/restart))
+
+  (ring.middleware.session.store/read-session session-store "81f5ba46-0e43-4e84-ab6a-94efa58205d0")
+
+  )
+
+
+
+(ftlm.hearts.system/restart)
