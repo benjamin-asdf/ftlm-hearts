@@ -1,29 +1,35 @@
-(ns ftlm.hearts.server
-  (:require
-   [integrant.core :as ig]
+(ns
 
-   [ring.adapter.jetty :as jetty]
-   [ring.util.response :as resp]
-   [ftlm.hearts.html :refer [page-resp graft]]
-   ;; [clojure.java.io :as io]
-   ;; [xtdb.api :as xt]
+    ^{:tools/eval-after-load
+      [(fn [] (ftlm.hearts.system/restart))]
+      }
 
-   [shadow.graft :as graft]
-   [shadow.css :refer [css]]
+    ftlm.hearts.server
+    (:require
+     [integrant.core :as ig]
+
+     [ring.adapter.jetty :as jetty]
+     [ring.util.response :as resp]
+     [ftlm.hearts.html :refer [page-resp graft]]
+     ;; [clojure.java.io :as io]
+     ;; [xtdb.api :as xt]
+
+     [shadow.graft :as graft]
+     [shadow.css :refer [css]]
 
 
-   [muuntaja.core :as m]
-   [ring.middleware.gzip :refer [wrap-gzip]]
-   [ring.middleware.defaults :refer [api-defaults] :as ring-defaults]
-   [ring.middleware.session.memory :as memory]
-   [reitit.coercion.malli :as coercion-malli]
+     [muuntaja.core :as m]
+     [ring.middleware.gzip :refer [wrap-gzip]]
+     [ring.middleware.defaults :refer [api-defaults] :as ring-defaults]
+     [ring.middleware.session.memory :as memory]
+     [reitit.coercion.malli :as coercion-malli]
 
-   [reitit.ring :as ring]
-   [reitit.coercion.spec]
-   [reitit.ring.middleware.defaults]
-   [ftlm.hearts.auth.auth :as auth]
-   [reitit.dev.pretty :as pretty]
-   [ftlm.hearts.auth.ui :as auth-ui]))
+     [reitit.ring :as ring]
+     [reitit.coercion.spec]
+     [reitit.ring.middleware.defaults]
+     [ftlm.hearts.auth.auth :as auth]
+     [reitit.dev.pretty :as pretty]
+     [ftlm.hearts.auth.ui :as auth-ui]))
 
 (def session-store (memory/memory-store))
 
@@ -34,9 +40,9 @@
   (page-resp
    req
    [:div {:class (css :flex :justify-center)}
-    [:div {:class (css [:lg :mt-20] :flex :flex-col :w-1of3 :h-1of3)}
+    [:div {:class (css :mt-20 :flex :flex-col :w-2of3 :h-2of3)}
      [:div {:class (css :self-stretch :flex :justify-center)}
-      [:button {:class (css :px-4 :shadow {:background-color "red"})} "lub-dub"]]
+      [:button {:class (css :px-8 :shadow :text-lg :text-white :bg-rose-500 :font-bold)} "lub-dub"]]
      (graft "clip" :prev-sibling clip)
      [:canvas {:id "main" }]
      (graft "clip" :prev-sibling clip)]]))
@@ -94,5 +100,7 @@
 
 (comment
   #_{:clj-kondo/ignore [:unresolved-namespace]}
-
   (ftlm.hearts.system/restart))
+
+(defn cider-eval-ns-after-loads []
+  (run! #(%) (some->> (meta *ns*) :tools/eval-after-load)))
