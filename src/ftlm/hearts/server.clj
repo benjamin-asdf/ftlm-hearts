@@ -95,10 +95,4 @@
 (comment
   #_{:clj-kondo/ignore [:unresolved-namespace]}
 
-  (ring.middleware.session.store/read-session session-store "81f5ba46-0e43-4e84-ab6a-94efa58205d0")
-
-  )
-
-
-
-(ftlm.hearts.system/restart)
+  (ftlm.hearts.system/restart))
