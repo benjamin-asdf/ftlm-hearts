@@ -12,8 +12,11 @@
   (when (bound? #'csrf/*anti-forgery-token*)
     [:input {:type "hidden" :name "__anti-forgery-token" :value csrf/*anti-forgery-token*}]))
 
-(defn
-  flash-message
+(defn anti-forgery-graft []
+  (when (bound? #'csrf/*anti-forgery-token*)
+    (graft "csrf-token" :none {:token csrf/*anti-forgery-token*})))
+
+(defn flash-message
   [{:keys [content type]}]
   (let [$color
         {:info (css :bg-sky-100)
@@ -36,11 +39,10 @@
       [:head
        [:link {:rel "preload" :as "script" :href "/js/main.js"}]
        [:link {:rel "stylesheet" :href "/css/ui.css"}]
-       (when (bound? #'csrf/*anti-forgery-token*)
-         [:meta {:name "x-csrf-token" :content csrf/*anti-forgery-token*}])
        [:title "ftl-hearts"]]
       [:body
        body
+       (anti-forgery-graft)
        (when-let [msg (-> req :flash)]
          (flash-message msg))
        [:script {:type "text/javascript" :src "/js/main.js" :defer true}]]))

@@ -33,17 +33,13 @@
 (defn clip-page [req]
   (page-resp
    req
-   [:div.clip
-    {:class (css :flex :justify-center)}
-    [:div
-     ;; [:svg
-     ;;  {:xmlns "http://www.w3.org/2000/svg" :width "200" :height "200" :viewBox "0 0 100 100"}
-     ;;  [:circle {:cx "50" :cy "50" :r "50" :fill "orange"}]]
-     ;; (graft "clip" :prev-sibling clip)
-     ;; [:button {:class (css :px-4 :shadow {:background-color "red"})} "lub-dub"]
-     ;; (graft "clip" :prev-sibling clip)
-     [:canvas {:id "main" :class (css :w2of4 :h2of5)}]
-     ]]))
+   [:div {:class (css :flex :justify-center)}
+    [:div {:class (css [:lg :mt-20] :flex :flex-col :w-1of3 :h-1of3)}
+     [:div {:class (css :self-stretch :flex :justify-center)}
+      [:button {:class (css :px-4 :shadow {:background-color "red"})} "lub-dub"]]
+     (graft "clip" :prev-sibling clip)
+     [:canvas {:id "main" }]
+     (graft "clip" :prev-sibling clip)]]))
 
 (defmethod ig/init-key :router/routes [_ _]
   [["/" {:get {:handler #'clip-page}}]

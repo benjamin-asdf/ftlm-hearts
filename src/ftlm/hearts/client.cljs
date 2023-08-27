@@ -28,6 +28,7 @@
    [thi.ng.geom.gl.shaders.basic :as basic]
    [thi.ng.geom.circle :as c]
    [thi.ng.geom.polygon :as poly]
+   [thi.ng.geom.rect :as rect]
 
    [thi.ng.geom.gl.shaders.lambert :as lambert]
 
@@ -37,14 +38,15 @@
   ;;  [thi.ng.math.macros :as mm])
   )
 
-;; grab csrf token from html head meta, could alternatively be set via a graft
-(def csrf-token (when-let [e (js/document.querySelector "meta[name=x-csrf-token]")]
-                  (.-content e)))
+(def csrf-token (atom nil))
+
+(defmethod graft/scion "csrf-token" [opts]
+  (reset! csrf-token (:token opts)))
 
 ;; look ma, no libs. these should likely be library functions
 ;; should obviously do more validation and error checking here, but for our purposes this is enough
 (defn req [href opts]
-  (js-await [res (js/fetch href (clj->js (assoc-in opts [:headers "x-csrf-token"] csrf-token)))]
+  (js-await [res (js/fetch href (clj->js (assoc-in opts [:headers "x-csrf-token"] @csrf-token)))]
     (.text res)))
 
 (defonce state (atom {:curr-clip nil}))
@@ -84,41 +86,67 @@
 ;;   [stats]
 ;;   (.call (aget stats "update") stats))
 
+(defn lerp [x y t]
+  (+ x (* t (- y x))))
+
 (defn ^:export demo
   []
   (let [gl        (gl/gl-context "main")
         view-rect (gl/get-viewport-rect gl)
-        model     (-> (a/aabb 0.8)
-                      (g/center)
-                      (g/as-mesh
-                       {:mesh    (glm/indexed-gl-mesh 12 #{:col})
-                        :attribs {:col (->> [[1 0 0] [0 1 0] [0 0 1] [0 1 1] [1 0 1] [1 1 0]]
-                                            (map col/rgba)
-                                            (attr/const-face-attribs))}})
-                      (gl/as-gl-buffer-spec {})
-                      (cam/apply (cam/perspective-camera {:aspect view-rect}))
-                      (assoc :shader (sh/make-shader-from-spec gl (basic/make-shader-spec-3d true)))
-                      (gl/make-buffers-in-spec gl glc/static-draw))]
+        shader1   (sh/make-shader-from-spec gl (basic/make-shader-spec-2d false))
+        model
+        (-> (poly/cog 0.5 6 [0.9 1 1 0.9])
+            (gl/as-gl-buffer-spec {:normals false})
+            (gl/make-buffers-in-spec gl glc/static-draw)
+            (assoc-in [:uniforms :proj] (gl/ortho view-rect)))]
     (anim/animate
      (fn [t frame]
-       (doto gl
-         (gl/set-viewport view-rect)
-         (gl/clear-color-and-depth-buffer col/WHITE 1)
-         (gl/enable glc/depth-test)
-         (gl/draw-with-shader
-          (assoc-in model [:uniforms :model] (-> M44 (g/rotate-x t) (g/rotate-y (* t 2))))))
+       (gl/set-viewport gl view-rect)
+       (gl/clear-color-and-depth-buffer gl col/WHITE 1)
+       (gl/draw-with-shader
+        gl (-> model
+               (assoc :shader shader1)
+               (update-in [:attribs] dissoc :color)
+               (update-in [:uniforms] merge
+                          {:model
+                           (-> M44
+                               (g/translate (vec3 0 0 0))
+
+                               (g/rotate (* HALF_PI t))
+
+                               ;; (g/rotate (Math/abs (Math/sin (* 2 (mod t 2)))))
+                               ;; (g/rotate (* 2 (if (even? (int (/ t 3))) 1 -1) t))
+
+                               ;; (g/scale
+                               ;;  (let [t (mod t 1.0)
+                               ;;        t-ms (* 1000 t)]
+                               ;;    (println t-ms)
+                               ;;    (cond
+                               ;;      (< t-ms 250)
+                               ;;      (lerp 1.0 0.8 t)
+                               ;;      ;; (lerp 1 1.5 t)
+                               ;;      (< 250 t-ms 300)
+                               ;;      (lerp 0.8 0.9 t)
+                               ;;      ;; (lerp 1.5 1 t)
+                               ;;      (< 300 t-ms 400)
+                               ;;      (lerp 0.9 0.8 t)
+                               ;;      ;; (lerp 1 1.4 t)
+                               ;;      (< 400 t-ms)
+                               ;;      (lerp 0.8 1.0 t)
+                               ;;      ;; (lerp 1.4 1 t)
+                               ;;      ))
+                               ;;  )
+
+                               (g/scale (- 1.6 (/ (Math/abs (Math/sin (* PI t))) 1.4)))
+
+                               )
+                           :color
+                           [(+ 0.8 (Math/abs (Math/sin (* PI t))))
+                            (Math/abs (Math/sin (* PI t)))
+                            (+ 0.4 (Math/abs (Math/sin (* PI t))))
+                            1]
+                           })))
        true))))
 
-(let [center (thi.ng.geom.vector/vec2 0 0)]
-  (->> (range 1 10)
-       (map #(c/circle center %))
-       (reduce (fn [coll c] (conj coll c)) [])))
 
 (demo)
-
-
-
-
-(comment
-
-  (graft/reload!))
