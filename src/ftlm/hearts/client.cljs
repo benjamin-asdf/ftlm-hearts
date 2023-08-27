@@ -60,7 +60,8 @@
           (fn
             []
             (js/window.navigator.vibrate (clj->js timestamps)))
-          1000)))
+          1000)
+         :animating? true))
 
 (defmethod graft/scion "clip" [opts btn]
   (.addEventListener btn "click" (fn [_] (start-clip! opts))))
@@ -70,24 +71,6 @@
    btn "click"
    (fn [_]
      (set! (.. (js/document.getElementById (-> opts :data :elm-id)) -style -display) "none"))))
-
-(defn init []
-  (graft/init reader/read-string))
-
-;; (defn init-stats
-;;   []
-;;   (let [stats (js/Stats.)
-;;         sdom (.call (aget stats "getDomElement") stats)]
-;;     (.appendChild (.-body js/document) sdom)
-;;     (.setAttribute sdom "class" "stats")
-;;     stats))
-
-;; (defn update-stats
-;;   [stats]
-;;   (.call (aget stats "update") stats))
-
-(defn lerp [x y t]
-  (+ x (* t (- y x))))
 
 (defn ^:export demo
   []
@@ -103,50 +86,25 @@
      (fn [t frame]
        (gl/set-viewport gl view-rect)
        (gl/clear-color-and-depth-buffer gl col/WHITE 1)
-       (gl/draw-with-shader
-        gl (-> model
-               (assoc :shader shader1)
-               (update-in [:attribs] dissoc :color)
-               (update-in [:uniforms] merge
-                          {:model
-                           (-> M44
-                               (g/translate (vec3 0 0 0))
-
-                               (g/rotate (* HALF_PI t))
-
-                               ;; (g/rotate (Math/abs (Math/sin (* 2 (mod t 2)))))
-                               ;; (g/rotate (* 2 (if (even? (int (/ t 3))) 1 -1) t))
-
-                               ;; (g/scale
-                               ;;  (let [t (mod t 1.0)
-                               ;;        t-ms (* 1000 t)]
-                               ;;    (println t-ms)
-                               ;;    (cond
-                               ;;      (< t-ms 250)
-                               ;;      (lerp 1.0 0.8 t)
-                               ;;      ;; (lerp 1 1.5 t)
-                               ;;      (< 250 t-ms 300)
-                               ;;      (lerp 0.8 0.9 t)
-                               ;;      ;; (lerp 1.5 1 t)
-                               ;;      (< 300 t-ms 400)
-                               ;;      (lerp 0.9 0.8 t)
-                               ;;      ;; (lerp 1 1.4 t)
-                               ;;      (< 400 t-ms)
-                               ;;      (lerp 0.8 1.0 t)
-                               ;;      ;; (lerp 1.4 1 t)
-                               ;;      ))
-                               ;;  )
-
-                               (g/scale (- 1.6 (/ (Math/abs (Math/sin (* PI t))) 1.4)))
-
-                               )
-                           :color
-                           [(+ 0.8 (Math/abs (Math/sin (* PI t))))
-                            (Math/abs (Math/sin (* PI t)))
-                            (+ 0.4 (Math/abs (Math/sin (* PI t))))
-                            1]
-                           })))
+       (when
+           (:animating? @state)
+           (gl/draw-with-shader
+            gl (-> model
+                   (assoc :shader shader1)
+                   (update-in [:attribs] dissoc :color)
+                   (update-in [:uniforms] merge
+                              {:model
+                               (-> M44
+                                   (g/translate (vec3 0 0 0))
+                                   (g/rotate (* HALF_PI t))
+                                   (g/scale (- 1.6 (/ (Math/abs (Math/sin (* PI t))) 1.4))))
+                               :color
+                               [(+ 0.8 (Math/abs (Math/sin (* PI t))))
+                                (Math/abs (Math/sin (* PI t)))
+                                (+ 0.4 (Math/abs (Math/sin (* PI t))))
+                                1]}))))
        true))))
 
-
-(demo)
+(defn init []
+  (graft/init reader/read-string)
+  (demo))
